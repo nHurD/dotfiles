@@ -11,40 +11,36 @@ set nu
 set nocompatible              " be iMproved
 filetype off                  " required!
 
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
 
 let g:airline_powerline_fonts=1
 let g:bufferline_echo = 0
 
-" let Vundle manage Vundle
-" " required! 
-Plugin 'gmarik/vundle'
-"Plugin 'Lokaltog/powerline'
-Plugin 'tpope/vim-fugitive'
-Plugin 'scrooloose/syntastic'
-Plugin 'scrooloose/nerdtree'
-Plugin 'hynek/vim-python-pep8-indent'
-"Plugin 'jmcantrell/vim-virtualenv'
-Plugin 'cwood/vim-django'
-"Plugin 'Shougo/neocomplete.vim'
-Plugin 'klen/python-mode'
-Plugin 'christoomey/vim-tmux-navigator'
-Plugin 'Yggdroot/indentLine'
-Plugin 'jgdavey/tslime.vim'
-"Plugin 'bling/vim-airline'
-Plugin 'edkolev/promptline.vim'
-Plugin 'junegunn/goyo.vim'
-Plugin 'jonathanfilip/vim-lucius'
-"Plugin 'edkolev/tmuxline.vim'
-Plugin 'nHurD/vim-hybrid'
+call plug#begin('~/.vim/plugged')
+"Plug 'Lokaltog/powerline'
+Plug 'tpope/vim-fugitive'
+Plug 'scrooloose/syntastic'
+Plug 'scrooloose/nerdtree'
+Plug 'hynek/vim-python-pep8-indent'
+"Plug 'jmcantrell/vim-virtualenv'
+Plug 'cwood/vim-django'
+"Plug 'Shougo/neocomplete.vim'
+Plug 'klen/python-mode'
+Plug 'christoomey/vim-tmux-navigator'
+Plug 'Yggdroot/indentLine'
+Plug 'jgdavey/tslime.vim'
+"Plug 'bling/vim-airline'
+Plug 'edkolev/promptline.vim'
+Plug 'junegunn/goyo.vim'
+Plug 'jonathanfilip/vim-lucius'
+"Plug 'edkolev/tmuxline.vim'
+Plug 'bling/vim-airline'
+Plug 'nHurD/vim-hybrid'
 
-call vundle#end()
+call plug#end()
 
 filetype plugin indent on     " required!
 autocmd FileType python setlocal completeopt-=preview
 
-set rtp+=~/.local/lib/python2.7/site-packages/powerline/bindings/vim
 set laststatus=2
 set noshowmode
 "let g:hybrid_use_Xresources = 1
