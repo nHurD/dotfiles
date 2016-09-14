@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 
 # Emacs configuration
-ln -s emacs.d ~/.emacs.d
+mkdir -p ~/.emacs.d
+ln -s emacs.d/init.el ~/.emacs.d/init.el
+ln -s emacs.d/jrsteele.org ~/.emacs.d/jrsteele.org
+
+# Tmux
+ln -s tmux.conf ~/.tmux.conf
 
 # Install vim plugins
 curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
