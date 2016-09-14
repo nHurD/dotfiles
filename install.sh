@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
+# Emacs configuration
+ln -s emacs.d ~/.emacs.d
+
 # Install vim plugins
 curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
      https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 vim +PlugInstall +qall
 ln -s vimrc ~/.vimrc
 
-# Spacemacs
-git clone --recursive http://github.com/syl20bnr/spacemacs ~/.emacs.d
-ln -s spacemacs ~/.spacemacs
 
 # Prezto
 git clone --recursive https://github.com/sorin-ionescu/prezto.git "${ZDOTDIR:-$HOME}/.zprezto"
