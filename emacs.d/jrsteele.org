@@ -1,0 +1,376 @@
+#+TITLE: Jonathan Steele's Emacs Configuration
+#+OPTIONS: toc:4 h:4
+* Introduction
+#+BEGIN_QUOTE
+Blah blah blah, something about literate programming.
+
+--Me
+#+END_QUOTE
+Initially I was pretty fond of using the configuration provided by the
+[[http://spacemacs.org][Spacemacs]] project, but after some time found it to be a bit too cumbersome and
+also proved to be quite slow when loading =Emacs= initially. After much
+deliberation, I decided it was time to winnow my configuration down to only the
+bits that I had used on a more frequent basis.
+
+At first, I started utilizing a series of configuration files in my ~.emacs.d~
+directory that were broken out by category and purpose. After several hours of
+tweaking and perfecting, that too still felt a bit thrown together with no real
+documentation either. I mentioned to a coworker--and fellow Emacs user--that I
+was refactoring my configuration files, and he mentioned the ability to store
+everything within ~Org~ mode files.
+
+After doing some initial research, I was immediately hooked and began moving all
+of my customizations into the sections listed below.
+* Settings
+** Bootstrapping Emacs
+In order for Emacs to properly load this file, your =~/.emacs.d/init.el= file
+should look like the following:
+#+BEGIN_EXAMPLE
+  ;;; init.el --- Where all the magic begins
+  ;;
+  ;; This file allows Emacs to initialize my customizations
+  ;; in Emacs lisp embedded in *one* literate Org-mode file.
+
+  ;; This sets up the load path so that we can override it
+
+  ;; Added by Package.el.  This must come before configurations of
+  ;; installed packages.  Don't delete this line.  If you don't want it,
+  ;; just comment it out by adding a semicolon to the start of the line.
+  ;; You may delete these explanatory comments.
+
+  (package-initialize)
+  (setq package-enable-at-startup nil)
+
+  (require 'org)
+  (org-babel-load-file (expand-file-name "jrsteele.org" "~/.emacs.d"))
+
+  ;; Keep emacs Custom-settings in separate file
+  (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+  (load custom-file)
+  ;;; init.el ends here
+#+END_EXAMPLE
+** My information
+#+BEGIN_SRC emacs-lisp
+  (setq user-full-name "Jonathan R. Steele"
+        user-mail-address "jrsteele@gmail.com")
+#+END_SRC
+** Package Support
+I utilize the use-package macro for handling all of my package needs.
+#+BEGIN_SRC emacs-lisp
+  (require 'package)
+  (setq package-archives '(("org"       . "http://orgmode.org/elpa/")
+                           ("gnu"       . "http://elpa.gnu.org/packages/")
+                           ("melpa"     . "https://melpa.org/packages/")
+                           ("marmalade" . "http://marmalade-repo.org/packages/")))
+  (package-initialize)
+  (setq load-prefer-newer t)
+  (unless (package-installed-p 'use-package)
+    (package-refresh-contents)
+    (package-install 'use-package))
+  (require 'use-package)
+#+END_SRC
+** Generic Emacs Customizations
+*** Disable Auto save
+#+BEGIN_SRC emacs-lisp
+  (setq auto-save-default nil)
+#+END_SRC
+*** Disable Backup Files
+#+BEGIN_SRC emacs-lisp
+  (setq make-backup-files nil)
+#+END_SRC
+*** No tabs
+Ensure that when I hit =tab= that it will provide 4 spaces rather than the
+tab character.
+#+BEGIN_SRC emacs-lisp
+  (setq-default indent-tabs-mode nil
+                tab-width 4)
+#+END_SRC
+*** Switch Prompts
+Change yes or no prompts into y or n
+#+BEGIN_SRC emacs-lisp
+  (fset 'yes-or-no-p 'y-or-n-p)
+#+END_SRC
+*** Remove trailing whitespaces
+This annoys the crap out of me.
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'before-save-hook 'delete-trailing-whitespace)
+#+END_SRC
+** Interface
+I generaly like to hide the scroollbar and menubar in both the
+graphical and terminal based mode of =Emacs=.
+*** OSX Specific settings
+**** Disable the menubar mode
+#+BEGIN_SRC emacs-lisp
+  (unless (eq window-system 'mac)
+    (when (and (fboundp 'menu-bar-mode) (not (eq menu-bar-mode -1)))
+      (menu-bar-mode -1)))
+#+END_SRC
+**** Set font and ligatures
+#+BEGIN_SRC emacs-lisp
+  (if (eq system-type 'darwin)
+      (progn (set-frame-font "Fira Code 9" t t)
+      (mac-auto-operator-composition-mode 1)))
+#+END_SRC
+*** Enable column number mode
+I tend to prefer to see what column my text/cursor is located at so I can
+better adhere to the 80 column rule.
+#+BEGIN_SRC emacs-lisp
+  (column-number-mode 1)
+#+END_SRC
+*** Disable the scrollbar
+#+BEGIN_SRC emacs-lisp
+  (when (and (fboundp 'scroll-bar-mode) (not (eq scroll-bar-mode -1)))
+    (scroll-bar-mode -1))
+#+END_SRC
+*** Disable the toolbar
+#+BEGIN_SRC emacs-lisp
+  (when (and (fboundp 'tool-bar-mode) (not (eq tool-bar-mode -1)))
+    (tool-bar-mode -1))
+#+END_SRC
+*** Theme
+I'm currently using the good ole' Zenburn theme
+#+BEGIN_SRC emacs-lisp
+  (use-package zenburn-theme
+    :ensure t
+    :config
+    (load-theme 'zenburn t))
+#+END_SRC
+*** Mode Line modifications
+While I was doing research on a powerline like funcationality
+for emacs, I discovered this package that will beautifully
+reduce the amount of "clutter" found in the typical emacs
+mode line.
+#+BEGIN_SRC emacs-lisp
+  (use-package smart-mode-line
+    :ensure t
+    :config
+    (setq sml/no-confirm-load-theme t
+          sml/shorten-modes t
+          sml/shorten-directory t
+          sml/name-width 40
+          sml/mode-width 40
+          sml/theme 'respectful)
+    (sml/setup))
+#+END_SRC
+** Navigation
+*** Window Numbering
+I like to use the window-numbering package to easily bounce between windows
+by using =M-<number>=
+#+BEGIN_SRC emacs-lisp
+  (use-package window-numbering
+    :ensure t
+    :config
+    (window-numbering-mode 1))
+#+END_SRC
+*** Better searching
+I'm using swiper and ivy to serch buffers
+#+BEGIN_SRC emacs-lisp
+  (use-package swiper
+    :ensure t
+    :diminish ivy-mode
+    :init
+    (setq ivy-display-style 'fancy
+          ivy-height 4
+          ivy-use-virtual-buffers t)
+    (ivy-mode 1)
+    :bind (("C-s" . swiper)
+           ("C-r" . swiper)
+           ("C-c C-r" . ivy-resume)))
+#+END_SRC
+*** Project Browsing
+#+BEGIN_SRC emacs-lisp
+  (use-package projectile
+    :ensure t
+    :config
+    (projectile-global-mode)
+    (setq projectile-mode-line
+          '(:eval (format " [%s]" (projectile-project-name))))
+    (setq projectile-remember-window-configs t)
+    (setq projectile-completion-system 'ivy)
+    (setq projectile-switch-project-action 'projectile-dired))
+#+END_SRC
+*** Better M-x
+Use councel to provide better M-x functionality
+#+BEGIN_SRC emacs-lisp
+  (use-package counsel
+    :ensure t
+    :init
+    (global-unset-key (kbd "C-z"))
+    :bind
+    ("M-x" . counsel-M-x)
+    ("C-z f" . counsel-describe-function)
+    ("C-z v" . counsel-describe-variable)
+    ("C-c k" . counsel-ag))
+#+END_SRC
+
+** Text settings
+*** Spellchecking
+I'd like to think of myself as a person who spells things relatively well, but
+this will provide me with some extra insurance
+#+BEGIN_SRC emacs-lisp
+  (use-package flyspell
+    :ensure t
+    :bind (("C-`" . ispell-word)
+           ("C-~" . ispell-buffer))
+    :init
+    (dolist (hook '(text-mode-hook org-mode-hook))
+      (add-hook hook (lambda () (flyspell-mode 1)))))
+#+END_SRC
+*** 80 Column Word-wrapping
+#+BEGIN_SRC emacs-lisp
+  (setq fill-column 80)
+#+END_SRC
+*** Org mode
+**** Org babel source blocks
+Enable syntax highlighting within the source blocks and keep the editing pop-up
+ window within the same window. Also, strip leading and trailing empty lines if
+any.
+#+BEGIN_SRC emacs-lisp
+  (setq org-src-fontify-natively                       t
+        org-src-window-setup                           'current-window
+        org-src-strip-leading-and-trailing-blank-lines t
+        org-src-tab-acts-natively                      t)
+#+END_SRC
+** Development Related Settings
+*** Git Integration
+**** Integrate magit
+I typicaly utilize the default bindings with magit.
+#+BEGIN_SRC emacs-lisp
+  (use-package magit
+    :ensure t
+    :config
+    (setq magit-completing-read-function 'ivy-completing-read))
+#+END_SRC
+**** Git Gutter
+Display new additions, modifications, or deletions within the gutter.
+I prefer to see these changes on the right hand side of the screen.
+#+BEGIN_SRC emacs-lisp
+  (use-package git-gutter-fringe
+    :ensure t
+    :diminish git-gutter-mode
+    :config
+    (use-package git-gutter
+      :ensure t)
+    (setq git-gutter-fr:side 'right-fringe)
+    (global-git-gutter-mode +1))
+#+END_SRC
+*** Auto completion
+Utilize Company mode for autocompletion
+#+BEGIN_SRC emacs-lisp
+  (use-package company
+    :ensure t
+    :diminish company-mode
+    :init
+    (add-hook 'after-init-hook 'global-company-mode)
+    :bind
+    ("M-/" . company-complete-common)
+    :config
+    (setq company-dabbrev-downcase nil))
+#+END_SRC
+*** Syntax / Error Checking
+Install and use flyckeck for determining code issues
+#+BEGIN_SRC emacs-lisp
+  (use-package flycheck
+    :ensure t
+    :diminish flycheck
+    :config
+    (setq flycheck-check-syntax-automatically '(mode-enabled save idle-change))
+    (add-hook 'sh-mode-hook 'flycheck-mode))
+#+END_SRC
+*** Smartparens
+This package makes dealing with parentheses, braces, and
+brackest much easisr. For now I use the default settings
+and enable it globally
+#+BEGIN_SRC emacs-lisp
+  (use-package smartparens
+    :ensure t
+    :config
+    (smartparens-global-mode 1))
+
+#+END_SRC
+*** Rainbow Parentheses
+This helpful little package will highlight matching parentheses so it makes
+determining if the parentheses do infact match.
+#+BEGIN_SRC emacs-lisp
+  (use-package rainbow-delimiters
+    :ensure t
+    :init
+    (dolist (hook '(python-mode-hook emacs-lisp-mode-hook))
+      (add-hook hook #'rainbow-delimiters-mode)))
+#+END_SRC
+*** Python Development
+**** Anaconda Mode
+Add additional code navigation support for python-mode via anaconda-mode.
+This provides better eldoc, jump to definitions.
+#+BEGIN_SRC emacs-lisp
+  (use-package anaconda-mode
+    :ensure t
+    :diminish anaconda-mode
+    :config
+    (add-hook 'python-mode-hook 'anaconda-mode))
+#+END_SRC
+***** Anaconda Company Mode
+Use Anaconda's company mode backend for code completion.
+#+BEGIN_SRC emacs-lisp
+  (use-package company-anaconda
+    :ensure t
+    :config
+    (eval-after-load "company"
+      '(add-to-list 'company-backends 'company-anaconda))
+    (add-hook 'python-mode-hook 'anaconda-mode))
+#+END_SRC
+**** Python Mode
+I prefer to utilize the default python mode package that comes with emacs, but
+I like using ipython rather than the standard python interpreter
+#+BEGIN_SRC emacs-lisp
+  (use-package python
+    :ensure t
+    :diminish python-mode
+    :config
+    (defun my/python-mode-hook ()
+      (setq flycheck-flake8-maximum-complexity 10))
+     (setq python-shell-interpreter "ipython"
+            python-shell-interpreter-args "--simple-prompt -i")
+      (add-hook 'python-mode-hook 'flycheck-mode)
+      (add-hook 'python-mode-hook 'my/python-mode-hook)
+    :mode ("\\.py\\'" . python-mode)
+    :interpreter ("ipython" . python-mode))
+#+END_SRC
+
+**** Virtual Environment Support
+#+BEGIN_SRC emacs-lisp
+  (use-package pyvenv
+    :ensure t
+    :diminish pyvenv
+    :bind
+    ("M-RET v" . pyvenv-workon))
+#+END_SRC
+**** Django Support
+I utilize =pony-mode= to allow me to run Django's management
+commands from Emacs. It also supports virtual environments and
+the following can be added to a ~.dir-locals.el~ file:
+#+NAME: Local Pony Configuration Example
+#+BEGIN_EXAMPLE emacs-lisp
+  ((nil .
+        ((pony-settings (make-pony-project
+                         :python (concat (getenv "VIRTUAL_ENV") "/bin/python")
+                         :pythonpath "~/project/src"
+                         :settings "web.local_settings")))))
+#+END_EXAMPLE
+#+BEGIN_SRC emacs-lisp
+  (use-package pony-mode
+    :ensure t
+    :diminish pony-minor-mode)
+#+END_SRC
+** Greenphire related settings
+*** Shorten project directory names
+Make the directory names shorter, if at all possible, when working within a
+virtual environment.
+#+BEGIN_SRC emacs-lisp
+  (defun clincard/shorten-dirs ()
+    (add-to-list 'sml/replacer-regexp-list
+                 '("^/Volumes/work/clincard/src/greenphire/web/" ":web:") t))
+  (if (getenv "S") (clincard/shorten-dirs))
+  (setq pyvenv-post-activate-hooks '(clincard/shorten-dirs
+                                     sml/toggle-shorten-directory))
+#+END_SRC
