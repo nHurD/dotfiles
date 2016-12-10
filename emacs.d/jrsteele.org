@@ -1,4 +1,4 @@
-#+TITLE: Jonathan Steele's Emacs Configuration
+#+Title: Jonathan Steele's Emacs Configuration
 #+OPTIONS: toc:4 h:4
 * Introduction
 #+BEGIN_QUOTE
@@ -7,7 +7,9 @@ Blah blah blah, something about literate programming.
 --Me
 #+END_QUOTE
 Initially I was pretty fond of using the configuration provided by the
-[[http://spacemacs.org][Spacemacs]] project, but after some time found it to be a bit too cumbersome and
+[[http://spacemacs.org][Spacemacs]] project, but after some time found
+it to be a bit too cumberso
+me and
 also proved to be quite slow when loading =Emacs= initially. After much
 deliberation, I decided it was time to winnow my configuration down to only the
 bits that I had used on a more frequent basis.
@@ -95,6 +97,16 @@ This annoys the crap out of me.
 #+BEGIN_SRC emacs-lisp
   (add-hook 'before-save-hook 'delete-trailing-whitespace)
 #+END_SRC
+*** Which Key
+Shows which keys can be pressed next. Eg. if you press C-x and wait a
+few seconds, a window pops up with all the key bindings following the
+currently entered incomplete command.
+#+BEGIN_SRC emacs-lisp
+  (use-package which-key
+    :ensure t
+    :diminish which-key-mode
+    :config  (which-key-mode))
+#+END_SRC
 ** Interface
 I generaly like to hide the scroollbar and menubar in both the
 graphical and terminal based mode of =Emacs=.
@@ -108,7 +120,7 @@ graphical and terminal based mode of =Emacs=.
 **** Set font and ligatures
 #+BEGIN_SRC emacs-lisp
   (if (eq system-type 'darwin)
-      (progn (set-frame-font "Fira Code 9" t t)
+      (progn (set-frame-font "Fira Code 10" t t)
       (mac-auto-operator-composition-mode 1)))
 #+END_SRC
 *** Enable column number mode
@@ -152,6 +164,31 @@ mode line.
           sml/theme 'respectful)
     (sml/setup))
 #+END_SRC
+*** Golden Ratio Windows
+Automatically resize windows using the golden ratio when activating a
+pane.
+#+BEGIN_SRC emacs-lisp
+  (use-package golden-ratio
+    :ensure t
+    :diminish golden-ratio-mode
+    :init
+    (golden-ratio-mode 1)
+    (setq golden-ratio-auto-scale t)
+    :config
+    (setq golden-ratio-extra-commands
+          (append golden-ratio-extra-commands
+                  '(select-window-0
+                    select-window-1
+                    select-window-2
+                    select-window-3
+                    select-window-4
+                    select-window-5
+                    select-window-6
+                    select-window-7
+                    select-window-8
+                    select-window-9))))
+#+END_SRC
+
 ** Navigation
 *** Window Numbering
 I like to use the window-numbering package to easily bounce between windows
@@ -190,7 +227,7 @@ I'm using swiper and ivy to serch buffers
     (setq projectile-switch-project-action 'projectile-dired))
 #+END_SRC
 *** Better M-x
-Use councel to provide better M-x functionality
+Use counsel to provide better M-x functionality
 #+BEGIN_SRC emacs-lisp
   (use-package counsel
     :ensure t
@@ -202,7 +239,6 @@ Use councel to provide better M-x functionality
     ("C-z v" . counsel-describe-variable)
     ("C-c k" . counsel-ag))
 #+END_SRC
-
 ** Text settings
 *** Spellchecking
 I'd like to think of myself as a person who spells things relatively well, but
@@ -219,6 +255,8 @@ this will provide me with some extra insurance
 *** 80 Column Word-wrapping
 #+BEGIN_SRC emacs-lisp
   (setq fill-column 80)
+  (dolist (hook '(text-mode-hook org-mode-hook))
+    (add-hook hook (lambda () (auto-fill-mode 1))))
 #+END_SRC
 *** Org mode
 **** Org babel source blocks
@@ -231,6 +269,45 @@ any.
         org-src-strip-leading-and-trailing-blank-lines t
         org-src-tab-acts-natively                      t)
 #+END_SRC
+**** Org cleanup
+I like to utilize the appropriate indentation and hide the leading
+stars when browsing around in Org mode. I also like using a special
+character to denote note expansion.
+#+BEGIN_SRC emacs-lisp
+  (setq org-startup-indented t
+        org-odd-level-only nil
+        org-ellipsis " ▼" )
+#+END_SRC
+*** LaTeX Mode
+Enable the ever so powerful AUCTeX package for some added features
+when in latex mode
+#+BEGIN_SRC emacs-lisp
+  (use-package auctex
+    :ensure t
+    :mode ("\\.tex\\'" . latex-mode)
+    :commands (latex-mode LaTeX-mode plain-tex-mode)
+    :init
+    (progn
+      (add-hook 'LaTeX-mode-hook #'LaTeX-preview-setup)
+      (add-hook 'LaTeX-mode-hook #'flyspell-mode)
+      (setq TeX-auto-save t
+        TeX-parse-self t
+        TeX-save-query nil
+        TeX-PDF-mode t
+        latex-run-command "pdflatex")
+      (setq-default TeX-master nil)))
+#+END_SRC
+Also enable preview mode for in-line previews
+#+BEGIN_SRC emacs-lisp
+  (use-package preview
+    :commands LaTeX-preview-setup
+    :init
+    (progn
+      (setq-default preview-scale 1.4
+                    preview-scale-function '(lambda ()
+                                              (* (/ 10.0 (preview-document-pt))
+                                                 preview-scale)))))
+#+END_SRC
 ** Development Related Settings
 *** Git Integration
 **** Integrate magit
@@ -238,6 +315,9 @@ I typicaly utilize the default bindings with magit.
 #+BEGIN_SRC emacs-lisp
   (use-package magit
     :ensure t
+    :bind
+    (("C-c m s" . magit-status)
+     ("C-c m b" . magit-blame))
     :config
     (setq magit-completing-read-function 'ivy-completing-read))
 #+END_SRC
@@ -303,11 +383,12 @@ determining if the parentheses do infact match.
 Add additional code navigation support for python-mode via anaconda-mode.
 This provides better eldoc, jump to definitions.
 #+BEGIN_SRC emacs-lisp
-  (use-package anaconda-mode
-    :ensure t
-    :diminish anaconda-mode
-    :config
-    (add-hook 'python-mode-hook 'anaconda-mode))
+    (use-package anaconda-mode
+      :ensure t
+      :diminish anaconda-mode
+      :config
+      (add-hook 'python-mode-hook 'anaconda-mode)
+      (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
 #+END_SRC
 ***** Anaconda Company Mode
 Use Anaconda's company mode backend for code completion.
@@ -373,4 +454,80 @@ virtual environment.
   (if (getenv "S") (clincard/shorten-dirs))
   (setq pyvenv-post-activate-hooks '(clincard/shorten-dirs
                                      sml/toggle-shorten-directory))
+#+END_SRC
+*** Clincard Testing
+The functions listed below will automatically create a new ~comint~ buffer and
+run Clincard's test scripts from within that. Hopefully, once the test suite is
+straightened out, I can utilize the test runner that comes with =Pony= rather
+than using these custom methods.
+**** Django Unit Tests
+Run the standard Django unit tests
+#+BEGIN_SRC emacs-lisp
+  (defun clincard/django-tests
+      (test-name)
+    (interactive "sEnter Test Name: ")
+    (ansi-color-for-comint-mode-on)
+    (setenv "EXTRA" "-v2 --failfast")
+    (make-comint "Python[Django Tests]"
+                 (concat (getenv "S") "/django_tests.sh")
+                 nil
+                 test-name))
+#+END_SRC
+**** CC-Mock Tests
+Run the ever so lovely CC Mock integration tests with selenium.
+#+BEGIN_SRC emacs-lisp
+  (defun clincard/ccmock-tests
+      (test-name)
+    (interactive "sEnter Test Name: ")
+    (ansi-color-for-comint-mode-on)
+    (setenv "EXTRA" "-v2 --failfast")
+    (make-comint "Python[Django Tests]"
+                 (concat (getenv "S")
+                         "/cc_mock_tests.sh")
+                 nil
+                 test-name))
+#+END_SRC
+**** Browser / Legacy Integration Tests
+Run our legacy browser tests that utilize fixture data.
+#+BEGIN_SRC emacs-lisp
+  (defun clincard/browser-tests
+      (test-name)
+    (interactive "sEnter Test Name: ")
+    (ansi-color-for-comint-mode-on)
+    (setenv "EXTRA" "-v2 --failfast")
+    (make-comint "Python[Django Tests]"
+                 (concat (getenv "S")
+                         "/end_to_end.sh")
+                 nil
+                 test-name))
+#+END_SRC
+*** Clincard Database creation
+**** Create a branch database
+Create a database with testing data for the current branch.
+#+BEGIN_SRC emacs-lisp
+  (defun clincard/create-branch-db
+      ()
+    (interactive)
+    (ansi-color-for-comint-mode-on)
+    (split-window-sensibly)
+    (make-comint "Create Branch DB"
+                 (concat (getenv "S")
+                         "/create_branch_database.sh"
+                         nil))
+    (switch-to-buffer "*Create Branch DB*"))
+#+END_SRC
+**** Load Sanitized Backup
+Create a database based off of a template that contains a sanitized copy of our
+production data.
+#+BEGIN_SRC emacs-lisp
+  (defun clincard/load-prod-backup
+      ()
+    (interactive)
+    (ansi-color-for-comint-mode-on)
+    (split-window-sensibly)
+    (make-comint "Load Production Backup"
+                 (concat (getenv "S")
+                         "/load_prod_backup.sh")
+                 nil
+                 "-c"))
 #+END_SRC
