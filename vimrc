@@ -15,10 +15,12 @@ call plug#begin('~/.vim/plugged')
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-dispatch'
 Plug 'scrooloose/nerdtree', {'on': 'NERDTreeToggle'}
-"Plug 'Lokaltog/powerline', {'rtp': 'powerline/bindings/vim/'}
-Plug 'bling/vim-airline'
+"Plug 'bling/vim-airline'
+"Plug 'vim-airline/vim-airline-themes'
 "Plug 'edkolev/tmuxline.vim'
-Plug 'nHurD/vim-hybrid'
+Plug 'nightsense/vim-crunchbang'
+Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+Plug 'junegunn/fzf.vim'
 
 " Python Stuff
 Plug 'hynek/vim-python-pep8-indent', {'for': 'python'}
@@ -27,9 +29,11 @@ Plug 'klen/python-mode', {'for': 'python'}
 Plug 'lambdalisue/vim-django-support', {'for': ['python', 'html']}
 
 " Generic Coding Stuff
-Plug 'Shougo/neocomplete.vim'
-Plug 'scrooloose/syntastic', {'for': ['python', 'html', 'latex', 'json', 'rst']}
-Plug 'Yggdroot/indentline', {'for': ['python', 'clojure']}
+"Plug 'Shougo/neocomplete.vim'
+Plug 'Valloric/YouCompleteMe'
+Plug 'neomake/neomake'
+"Plug 'scrooloose/syntastic', {'for': ['python', 'html', 'latex', 'json', 'rst']}
+"Plug 'Yggdroot/indentline', {'for': ['python', 'clojure']}
 
 " Clojure Stuff
 Plug 'guns/vim-clojure-static', {'for': 'clojure'}
@@ -48,13 +52,24 @@ filetype plugin indent on     " required!
 autocmd FileType python setlocal completeopt-=preview
 
 " Powerline
-let g:Powerline_symbols = 'fancy'
 set noshowmode
-set laststatus=2
+"set laststatus=2
 
 " Generic UI stuff
+
+if (has("termguicolors"))
+ set termguicolors
+endif
+
 set background=dark
-colorscheme hybrid
+
+if &term =~ '256color'
+   set t_ut=
+endif
+
+set t_Co=256
+
+colorscheme crunchbang 
 set guifont=Monaco\ for\ Powerline:h10
 set guioptions-=r
 set guioptions-=L
@@ -91,12 +106,15 @@ let g:pymode_breakpoint_cmd = 'import ipdb; ipdb.set_trace() # XXX breakpoint'
 let g:syntastic_python_pylint_post_args='--disable=E1101'
 let g:syntastic_python_flake8_post_args='--max-complexity=10'
 
+autocmd! BufWritePost * Neomake
+
 " Generic stuff
 set colorcolumn=80
 
 " Airilne
-let g:airline_powerline_fonts = 1
-"let g:airline#extensions#tabline#enabled = 1
+" let g:airline_powerline_fonts = 1
+" let g:airline#extensions#tabline#enabled = 1
+" let g:airline_theme = 'base16'
 
 " Tslime.vim
 vmap <C-c><C-c> <Plug>SendSelectionToTmux
