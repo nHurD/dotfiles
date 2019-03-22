@@ -15,25 +15,31 @@ call plug#begin('~/.vim/plugged')
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-dispatch'
 Plug 'scrooloose/nerdtree', {'on': 'NERDTreeToggle'}
-"Plug 'bling/vim-airline'
-"Plug 'vim-airline/vim-airline-themes'
+Plug 'bling/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
 "Plug 'edkolev/tmuxline.vim'
 Plug 'nightsense/vim-crunchbang'
-Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
-Plug 'junegunn/fzf.vim'
+"Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+"Plug 'junegunn/fzf.vim'
+Plug 'kristijanhusak/vim-hybrid-material'
+Plug 'nightsense/stellarized'
+Plug 'nHurD/vim-hybrid'
+Plug 'ctrlpvim/ctrlp.vim'
+
 
 " Python Stuff
 Plug 'hynek/vim-python-pep8-indent', {'for': 'python'}
 Plug 'jmcantrell/vim-virtualenv', {'for': 'python'}
 Plug 'klen/python-mode', {'for': 'python'}
 Plug 'lambdalisue/vim-django-support', {'for': ['python', 'html']}
+Plug 'w0rp/ale'
 
 " Generic Coding Stuff
 "Plug 'Shougo/neocomplete.vim'
 Plug 'Valloric/YouCompleteMe'
-Plug 'neomake/neomake'
+"Plug 'neomake/neomake'
 "Plug 'scrooloose/syntastic', {'for': ['python', 'html', 'latex', 'json', 'rst']}
-"Plug 'Yggdroot/indentline', {'for': ['python', 'clojure']}
+Plug 'Yggdroot/indentline', {'for': ['python', 'clojure']}
 
 " Clojure Stuff
 Plug 'guns/vim-clojure-static', {'for': 'clojure'}
@@ -45,6 +51,8 @@ Plug 'luochen1990/rainbow', {'for': 'clojure'}
 Plug 'jgdavey/tslime.vim'
 Plug 'christoomey/vim-tmux-navigator'
 
+" C# stuff
+Plug 'OmniSharp/omnisharp-vim'
 
 call plug#end()
 
@@ -53,23 +61,20 @@ autocmd FileType python setlocal completeopt-=preview
 
 " Powerline
 set noshowmode
-"set laststatus=2
+set laststatus=2
 
 " Generic UI stuff
 
-if (has("termguicolors"))
- set termguicolors
-endif
+"if (has("termguicolors"))
+" set termguicolors
+"endif
 
 set background=dark
 
-if &term =~ '256color'
-   set t_ut=
-endif
 
-set t_Co=256
-
-colorscheme crunchbang 
+"colorscheme hybrid_material
+let g:hybrid_no_term_bg = 1
+colorscheme hybrid
 set guifont=Monaco\ for\ Powerline:h10
 set guioptions-=r
 set guioptions-=L
@@ -106,15 +111,13 @@ let g:pymode_breakpoint_cmd = 'import ipdb; ipdb.set_trace() # XXX breakpoint'
 let g:syntastic_python_pylint_post_args='--disable=E1101'
 let g:syntastic_python_flake8_post_args='--max-complexity=10'
 
-autocmd! BufWritePost * Neomake
 
 " Generic stuff
 set colorcolumn=80
 
 " Airilne
-" let g:airline_powerline_fonts = 1
-" let g:airline#extensions#tabline#enabled = 1
-" let g:airline_theme = 'base16'
+let g:airline_powerline_fonts = 1
+let g:airline_theme = 'hybrid'
 
 " Tslime.vim
 vmap <C-c><C-c> <Plug>SendSelectionToTmux
@@ -131,3 +134,43 @@ let g:clojure_fuzzy_indent = 1
 let g:clojure_align_subforms = 1
 let g:rainbow_active = 0
 autocmd FileType clojure :RainbowToggle
+
+" C#
+set completeopt=longest,menuone,preview
+let g:OmniSharp_timeout = 5
+set previewheight=5
+
+let g:ale_linters = {
+\ 'cs': ['OmniSharp']
+\}
+let g:OmniSharp_selector_ui = 'ctrlp'  " Use ctrlp.vim
+"autocmd FileType cs setlocal omnifunc=OmniSharp#Complete
+autocmd FileType cs setlocal completeopt-=preview
+augroup omnisharp_commands
+    autocmd!
+
+    " When Syntastic is available but not ALE, automatic syntax check on events
+    " (TextChanged requires Vim 7.4)
+    " autocmd BufEnter,TextChanged,InsertLeave *.cs SyntasticCheck
+
+    " Show type information automatically when the cursor stops moving
+    autocmd CursorHold *.cs call OmniSharp#TypeLookupWithoutDocumentation()
+
+    " The following commands are contextual, based on the cursor position.
+    autocmd FileType cs nnoremap <buffer> gd :OmniSharpGotoDefinition<CR>
+    autocmd FileType cs nnoremap <buffer> <Leader>fi :OmniSharpFindImplementations<CR>
+    autocmd FileType cs nnoremap <buffer> <Leader>fs :OmniSharpFindSymbol<CR>
+    autocmd FileType cs nnoremap <buffer> <Leader>fu :OmniSharpFindUsages<CR>
+
+    " Finds members in the current buffer
+    autocmd FileType cs nnoremap <buffer> <Leader>fm :OmniSharpFindMembers<CR>
+
+    autocmd FileType cs nnoremap <buffer> <Leader>fx :OmniSharpFixUsings<CR>
+    autocmd FileType cs nnoremap <buffer> <Leader>tt :OmniSharpTypeLookup<CR>
+    autocmd FileType cs nnoremap <buffer> <Leader>dc :OmniSharpDocumentation<CR>
+
+
+    " Navigate up and down by method/property/field
+    autocmd FileType cs nnoremap <buffer> <C-k> :OmniSharpNavigateUp<CR>
+    autocmd FileType cs nnoremap <buffer> <C-j> :OmniSharpNavigateDown<CR>
+augroup END
